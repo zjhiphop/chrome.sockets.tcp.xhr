@@ -1,7 +1,19 @@
-(function () {
-    'use strict';
+/*
+ Changed logs:
 
-    var ChromeSocketsXMLHttpRequest = chrome.sockets.tcp.xhr = function () {
+ * add ArrayBufferView support by jade.zhang
+ * add configuable user agent
+*/
+
+(function() {
+    'use strict';
+    var ArrayBufferView = ArrayBufferView || Object.getPrototypeOf(Object.getPrototypeOf(new Uint8Array)).constructor;
+
+    var userAgents = {
+        "Chrome": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36"
+    };
+
+    var ChromeSocketsXMLHttpRequest = chrome.sockets.tcp.xhr = function() {
         Object.defineProperties(this, {
             options: {
                 enumerable: false,
@@ -23,8 +35,8 @@
                         expired: false
                     },
                     headers: {
-                        'Connection': 'close',
-                        'User-Agent': 'chrome.sockets.tcp.xhr'
+                        'Connection': 'Keep-Alive',
+                        'User-Agent': userAgents.Chrome
                     },
                     response: {
                         headers: [],
@@ -234,11 +246,11 @@
             readyState: {
                 enumerable: true,
 
-                get: function () {
+                get: function() {
                     return this.props.readyState;
                 },
 
-                set: function (value) {
+                set: function(value) {
                     this.props.readyState = value;
 
                     this.dispatchEvent('readystatechange');
@@ -261,43 +273,43 @@
      */
     ChromeSocketsXMLHttpRequest.prototype.regex = new RegExp(
         '^' +
-            // protocol identifier
-            '(?:(https?|ftp)://)' +
-            // user:pass authentication
-            '(?:\\S+(?::\\S*)?@)?' +
-            '(' +
-                // IP address exclusion
-                // private & local networks
-                '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
-                '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
-                '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})' +
-                // IP address dotted notation octets
-                // excludes loopback network 0.0.0.0
-                // excludes reserved space >= 224.0.0.0
-                // excludes network & broacast addresses
-                // (first & last IP address of each class)
-                '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])' +
-                '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}' +
-                '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))' +
-            '|' +
-                // host name
-                '(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)' +
-                // domain name
-                '(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*' +
-                // TLD identifier
-                '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))' +
-            ')' +
-            // port number
-            '(?::(\\d{2,5}))?' +
-            // resource path
-            '(/[^\\s]*)?' +
+        // protocol identifier
+        '(?:(https?|ftp)://)' +
+        // user:pass authentication
+        '(?:\\S+(?::\\S*)?@)?' +
+        '(' +
+        // IP address exclusion
+        // private & local networks
+        '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
+        '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
+        '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})' +
+        // IP address dotted notation octets
+        // excludes loopback network 0.0.0.0
+        // excludes reserved space >= 224.0.0.0
+        // excludes network & broacast addresses
+        // (first & last IP address of each class)
+        '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])' +
+        '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}' +
+        '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))' +
+        '|' +
+        // host name
+        '(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)' +
+        // domain name
+        '(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*' +
+        // TLD identifier
+        '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))' +
+        ')' +
+        // port number
+        '(?::(\\d{2,5}))?' +
+        // resource path
+        '(/[^\\s]*)?' +
         '$', 'i'
     );
 
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-open()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.open = function (method, url) {
+    ChromeSocketsXMLHttpRequest.prototype.open = function(method, url) {
         this.options.method = method;
         this.options.uri = this.regex.exec(url);
 
@@ -325,7 +337,7 @@
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-setrequestheader()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.setRequestHeader = function (header, value) {
+    ChromeSocketsXMLHttpRequest.prototype.setRequestHeader = function(header, value) {
         if (this.readyState !== this.OPENED || this.options.inprogress === true) {
             throw new TypeError('InvalidStateError');
         }
@@ -345,7 +357,7 @@
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-send()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.send = function (data) {
+    ChromeSocketsXMLHttpRequest.prototype.send = function(data) {
         // If the state is not OPENED, throw an "InvalidStateError" exception.
         // If the send() flag is set, throw an "InvalidStateError" exception.
         if (this.readyState !== this.OPENED || this.options.inprogress === true) {
@@ -428,34 +440,33 @@
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-abort()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.abort = function () {
+    ChromeSocketsXMLHttpRequest.prototype.abort = function() {
         this.disconnect();
     };
 
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-getresponseheader()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.getResponseHeader = function (header) {
+    ChromeSocketsXMLHttpRequest.prototype.getResponseHeader = function(header) {
         return this.options.response.headers[header];
     };
 
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.getAllResponseHeaders = function () {
+    ChromeSocketsXMLHttpRequest.prototype.getAllResponseHeaders = function() {
         return this.options.response.headersText;
     };
 
     /**
      * http://www.w3.org/TR/XMLHttpRequest/#the-overridemimetype()-method
      */
-    ChromeSocketsXMLHttpRequest.prototype.overrideMimeType = function (mimetype) {
-    };
+    ChromeSocketsXMLHttpRequest.prototype.overrideMimeType = function(mimetype) {};
 
     /**
      * event managers
      */
-    ChromeSocketsXMLHttpRequest.prototype.addEventListener = function (name, callback) {
+    ChromeSocketsXMLHttpRequest.prototype.addEventListener = function(name, callback) {
         if (this.options.events[name]) {
             this.options.events[name].push(callback);
         } else {
@@ -493,7 +504,7 @@
             return false;
         }
 
-        this.options.events[name].forEach(function (event) {
+        this.options.events[name].forEach(function(event) {
             event.apply(this, Array.prototype.slice.call(args, 1));
         }.bind(this));
     };
@@ -501,7 +512,7 @@
     /**
      * chrome.sockets.tcp events
      */
-    ChromeSocketsXMLHttpRequest.prototype.onCreate = function (createInfo) {
+    ChromeSocketsXMLHttpRequest.prototype.onCreate = function(createInfo) {
         if (!this.options.inprogress) {
             return;
         }
@@ -513,7 +524,7 @@
         chrome.sockets.tcp.connect(createInfo.socketId, this.options.uri[2], port, this.onConnect.bind(this));
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.onConnect = function (result) {
+    ChromeSocketsXMLHttpRequest.prototype.onConnect = function(result) {
         if (!this.options.inprogress) {
             return;
         }
@@ -530,13 +541,13 @@
             chrome.sockets.tcp.onReceive.addListener(this.onReceive.bind(this));
 
             // send message as ArrayBuffer
-            this.generateMessage().toArrayBuffer(function sendMessage (buffer) {
+            this.generateMessage().toArrayBuffer(function sendMessage(buffer) {
                 chrome.sockets.tcp.send(this.options.createInfo.socketId, buffer, this.onSend.bind(this));
             }.bind(this));
         }
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.onSend = function (sendInfo) {
+    ChromeSocketsXMLHttpRequest.prototype.onSend = function(sendInfo) {
         if (sendInfo.resultCode < 0) {
             this.error({
                 error: 'send error',
@@ -547,14 +558,14 @@
         }
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.onReceiveError = function (info) {
+    ChromeSocketsXMLHttpRequest.prototype.onReceiveError = function(info) {
         this.error({
             error: 'receive error',
             resultCode: info.resultCode
         });
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.onReceive = function (info) {
+    ChromeSocketsXMLHttpRequest.prototype.onReceive = function(info) {
         // chrome.sockets.tcp.onReceiveError.addListener(this.onReceiveError.bind(this));
 
         if (!this.options.inprogress) {
@@ -574,7 +585,7 @@
     /**
      * internal methods
      */
-    ChromeSocketsXMLHttpRequest.prototype.parseResponse = function (response) {
+    ChromeSocketsXMLHttpRequest.prototype.parseResponse = function(response) {
         // detect CRLFx2 position
         var responseMatch = response.match(/\r\n\r\n/);
 
@@ -586,6 +597,8 @@
 
             return;
         }
+
+        console.log(response);
 
         // slice the headers up to CRLFx2
         this.options.response.headersText = response.slice(0, responseMatch.index);
@@ -604,7 +617,7 @@
             this.statusText = statusLineMatch[2];
         }
 
-        headerLines.forEach(function (headerLine) {
+        headerLines.forEach(function(headerLine) {
             // detect CRLFx2 position
             var headerLineMatch = headerLine.match(/:/);
 
@@ -621,7 +634,7 @@
         this.processResponse();
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.processResponse = function () {
+    ChromeSocketsXMLHttpRequest.prototype.processResponse = function() {
 
         // If the response has an HTTP status code of 301, 302, 303, 307, or 308
         // TODO: implement infinite loop precautions
@@ -687,7 +700,7 @@
         this.dispatchEvent('loadend');
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.generateMessage = function () {
+    ChromeSocketsXMLHttpRequest.prototype.generateMessage = function() {
         var headers = [];
 
         // add missing parts to header
@@ -697,10 +710,12 @@
             headers.push(name + ': ' + this.options.headers[name]);
         }
 
+        console.log("[Headers]", headers.join('\r\n') + '\r\n\r\n');
+
         return headers.join('\r\n') + '\r\n\r\n';
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.error = function (error) {
+    ChromeSocketsXMLHttpRequest.prototype.error = function(error) {
         // list of network errors as defined in chromium source:
         // https://code.google.com/p/chromium/codesearch#chromium/src/net/base/net_error_list.h&sq=package:chromium
         //
@@ -863,7 +878,7 @@
         this.dispatchEvent('error', error);
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.disconnect = function () {
+    ChromeSocketsXMLHttpRequest.prototype.disconnect = function() {
         this.options.inprogress = false;
 
         if (this.options.createInfo !== null) {
@@ -873,7 +888,7 @@
         }
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.expireTimer = function () {
+    ChromeSocketsXMLHttpRequest.prototype.expireTimer = function() {
         if (this.readyState === this.OPENED) {
             this.disconnect();
             this.options.timer.expired = true;
@@ -885,7 +900,7 @@
         }
     };
 
-    ChromeSocketsXMLHttpRequest.prototype.setMaxRedirects = function (max) {
+    ChromeSocketsXMLHttpRequest.prototype.setMaxRedirects = function(max) {
         this.options.redirects.max = max;
     };
 
@@ -893,22 +908,22 @@
      * internal methods
      * TODO: consider removing from global objects
      */
-    ArrayBuffer.prototype.toString = function (callback) {
+    ArrayBuffer.prototype.toString = function(callback) {
         var blob = new Blob([this]);
         var reader = new FileReader();
 
-        reader.onload = function (e) {
+        reader.onload = function(e) {
             callback(e.target.result);
         };
 
         reader.readAsText(blob);
     };
 
-    String.prototype.toArrayBuffer = function (callback) {
+    String.prototype.toArrayBuffer = function(callback) {
         var blob = new Blob([this]);
         var reader = new FileReader();
 
-        reader.onload = function (e) {
+        reader.onload = function(e) {
             callback(e.target.result);
         };
 
