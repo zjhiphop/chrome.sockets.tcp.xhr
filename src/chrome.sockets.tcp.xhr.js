@@ -35,7 +35,7 @@
                         expired: false
                     },
                     headers: {
-                        'Connection': 'Keep-Alive',
+                        'Connection': 'close',
                         'User-Agent': userAgents.Chrome
                     },
                     response: {
@@ -598,8 +598,6 @@
             return;
         }
 
-        console.log(response);
-
         // slice the headers up to CRLFx2
         this.options.response.headersText = response.slice(0, responseMatch.index);
 
@@ -710,9 +708,7 @@
             headers.push(name + ': ' + this.options.headers[name]);
         }
 
-        console.log("[Headers]", headers.join('\r\n') + '\r\n\r\n');
-
-        return headers.join('\r\n') + '\r\n\r\n';
+        return headers.join('\r\n') + '\r\n\r\n' + this.options.data;
     };
 
     ChromeSocketsXMLHttpRequest.prototype.error = function(error) {
