@@ -1,8 +1,9 @@
 /*
  Changed logs:
 
- * add ArrayBufferView support by jade.zhang
- * add configuable user agent
+ * add ArrayBufferView support by zjhiphop
+ * add configuable user agent by zjhiphop
+ * add option.data to message body to support POST/PUT by zjhiphop
 */
 
 (function() {
@@ -616,7 +617,7 @@
         }
 
         headerLines.forEach(function(headerLine) {
-            // detect CRLFx2 position
+            // detect header ':' position
             var headerLineMatch = headerLine.match(/:/);
 
             // sanity check
